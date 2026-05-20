@@ -1,5 +1,0 @@
-setup.py
-flightstand_examples.egg-info/PKG-INFO
-flightstand_examples.egg-info/SOURCES.txt
-flightstand_examples.egg-info/dependency_links.txt
-flightstand_examples.egg-info/top_level.txt

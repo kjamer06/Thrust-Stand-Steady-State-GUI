@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import flight_stand_api_v1_pb2 as flight__stand__api__v1__pb2
+import api.flight_stand_api_v1_pb2 as flight__stand__api__v1__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 GRPC_GENERATED_VERSION = '1.74.0'

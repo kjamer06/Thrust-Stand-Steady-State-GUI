@@ -10,8 +10,8 @@ import grpc
 import google.protobuf.field_mask_pb2 as field_mask
 from google.protobuf.timestamp_pb2 import Timestamp
 
-import flight_stand_api_v1_pb2 as fs
-import flight_stand_api_v1_pb2_grpc as fs_grpc
+import api.flight_stand_api_v1_pb2 as fs
+import api.flight_stand_api_v1_pb2_grpc as fs_grpc
 
 
 class FlightStand:

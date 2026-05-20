@@ -14,7 +14,7 @@ The package name should start with the company name and end with the major versi
 
 import abc
 import collections.abc
-import flight_stand_api_v1_pb2
+import api.flight_stand_api_v1_pb2 as flight_stand_api_v1_pb2
 import google.protobuf.empty_pb2
 import grpc
 import grpc.aio
