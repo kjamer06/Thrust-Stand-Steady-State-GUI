@@ -8,7 +8,7 @@ def clamp(value, min_value, max_value):
     return max(min_value, min(value, max_value))
 
 def spin_propellers(flightstand_manager):
-    dpg.add_text("[SIM] Initializing Propellers", parent="console_section")
+    print("[SIM] Initializing Propellers")
     spin_time = time.monotonic() + 10
 
     while time.monotonic() < spin_time:

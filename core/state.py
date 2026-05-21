@@ -11,7 +11,12 @@ class AppState:
         self.flightstand_manager = None
         self.current_event = None
         self.drag_coefficient = 0.95
-    
+        # MATPLOTLIB ARRAYS
+        self.altitude_plot = []
+        self.time_plot = []
+        self.thrust_plot = []
+        self.velocity_plot = []
+
     # THIS IS VERY VITAL TO PROGRAM IF THIS SWITCH IS FLIPPED FOR ANY REASON THE PROGRAM WILL SHUT OFF AND RESET ALL VALUES TO SAFE DEFAULTS
     def kill_switch(self):
         self.killswitch = True

@@ -1,10 +1,7 @@
 import dearpygui.dearpygui as dpg
 from core.state import state
 from models.mission_events import TakeoffEvent, HoverEvent, CruiseEvent, LandEvent
-from gui.helpers import show_takeoff_window, show_hover_window, show_cruise_window, update_mission_window
-
-def mission_event_clicked_callback(sender):
-    pass
+from gui.helpers import show_takeoff_window, show_hover_window, show_cruise_window, update_mission_window, clear_input_window
 
 def drone_specifications_callback():
     state.thrust_max = dpg.get_value("max_thrust_input")
@@ -14,7 +11,7 @@ def drone_specifications_callback():
 
     # Close drone specifications window and add info to log console
     dpg.configure_item("Drone Specifications", show=False)
-    dpg.add_text("[INFO] Drone specifications submitted successfully", parent="console_section")
+    print("[INFO] Drone specifications submitted successfully")
 
 def takeoff_button_callback():
     state.current_event = "takeoff"
@@ -35,14 +32,21 @@ def add_button_callback():
     match state.current_event:
         case "takeoff":
             state.current_event = TakeoffEvent(target_thrust=dpg.get_value("thrust_slider"), target_altitude=dpg.get_value("altitude_input"))
+            clear_input_window()
+            dpg.add_text("Takeoff has been added to the mission sequence, you may continue entering missions into the mission sequence\nor press start to initiate the sequence shown in the mission screen.", parent="dynamic_event_inputs")
         case "hover":
             state.current_event = HoverEvent(hover_time=dpg.get_value("hover_time_input"))
+            clear_input_window()
+            dpg.add_text("Hover has been added to the mission sequence, you may continue entering missions into the mission sequence\nor press start to initiate the sequence shown in the mission screen.", parent="dynamic_event_inputs")
         case "cruise":
             state.current_event = CruiseEvent(target_velocity=dpg.get_value("cruise_velocity_input"), cruise_distance=dpg.get_value("cruise_distance_input"))
+            clear_input_window()
+            dpg.add_text("Cruise has been added to the mission sequence, you may continue entering missions into the mission sequence\nor press start to initiate the sequence shown in the mission screen.", parent="dynamic_event_inputs")
         case "land":
             state.current_event = LandEvent()
+            clear_input_window()
+            dpg.add_text("Landing has been added to the mission sequence, you may continue entering missions into the mission sequence\nor press start to initiate the sequence shown in the mission screen.", parent="dynamic_event_inputs")
     state.event_sequence.append(state.current_event)
-    print(state.event_sequence)
     update_mission_window()
 
 def undo_button_callback():

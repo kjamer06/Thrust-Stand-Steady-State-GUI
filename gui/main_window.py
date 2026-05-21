@@ -2,14 +2,13 @@ import dearpygui.dearpygui as dpg
 from config.settings import THRUST_MAX, POWER_MAX
 from gui.callbacks import drone_specifications_callback, takeoff_button_callback, hover_button_callback, cruise_button_callback, land_button_callback, add_button_callback, undo_button_callback, clear_button_callback, start_button_callback
 from gui.helpers import load_texture, add_scaled_image
-from core.state import state     
 import random   
 
 def initialize_GUI():
     dpg.create_context()
 
     load_texture("assets/cat.png", "cat_image")
-    load_texture("assets/auburn_logo.png", "auburn_logo_image")
+    load_texture("assets/cat_2.jpg", "auburn_logo_image")
 
 ######################################################
 # POPUP WINDOW FOR DRONE SPECIFICATIONS INPUT
@@ -33,11 +32,10 @@ def initialize_GUI():
         #######################################################
         with dpg.child_window(tag="input_section", width=1300, height=190, border=True):
             
-            with dpg.group(tag="upper_screen"):
-                with dpg.group(tag="dynamic_event_inputs"):
-                    dpg.add_text("To get started, build a sequence of missions in the mission builder window")
+            with dpg.group(tag="dynamic_event_inputs"):
+                dpg.add_text("To get started, build a sequence of missions in the mission builder window")
 
-            with dpg.group(tag="select_event_menu", horizontal=True):
+            with dpg.group(tag="select_event_menu", horizontal=True, pos=(0, 120)):
                 dpg.add_button(label="Takeoff", height=50, width=70, callback=takeoff_button_callback, tag="takeoff_button")
                 dpg.add_button(label="Hover", height=50, width=70, callback=hover_button_callback, tag="hover_button")
                 dpg.add_button(label="Cruise",height=50,width=70,callback=cruise_button_callback,tag="cruise_button")
@@ -49,21 +47,21 @@ def initialize_GUI():
                 dpg.add_button(label="Undo",height=50,width=70,callback=undo_button_callback,tag="undo_button")
                 dpg.add_button(label="Clear",height=50,width=70,callback=clear_button_callback,tag="clear_button")
                 dpg.add_button(label="Start", height=50, width=70, callback=start_button_callback, tag="start_button")
-                """
-                with dpg.child_window(width=195, height=170):
-                    chance = random.randint(1,100)
-                    if (chance <= 10):
-                        add_scaled_image("cat_image", desired_width = 150)
-                    else:
-                        add_scaled_image("auburn_logo_image", desired_width=175)                
-                """
+                
+            with dpg.child_window(width=195, height=170, pos=(1050, 10)):
+                chance = random.randint(1,100)
+                if (chance <= 50):
+                    add_scaled_image("cat_image", desired_width = 150)
+                else:
+                    add_scaled_image("auburn_logo_image", desired_width=175)                
+                
 
         #######################################################
-        # CONSOLE LOG
+        # CONSOLE LOG (possibly graph)
         #######################################################
         with dpg.group(tag="lower_section", horizontal=True):
-            with dpg.child_window(tag="console_section", width=1000, height=500, border=True):
-                dpg.add_text("Console")
+            with dpg.child_window(tag="plot_windows", width=1000, height=500, border=True):
+                dpg.add_text("Run a simulation to see the plots")
         #######################################################
         # EVENTS SECTION
         #######################################################
