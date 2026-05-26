@@ -39,7 +39,7 @@ def add_button_callback():
             clear_input_window()
             dpg.add_text("Hover has been added to the mission sequence, you may continue entering missions into the mission sequence\nor press start to initiate the sequence shown in the mission screen.", parent="dynamic_event_inputs")
         case "cruise":
-            state.current_event = CruiseEvent(target_velocity=dpg.get_value("cruise_velocity_input"), cruise_distance=dpg.get_value("cruise_distance_input"))
+            state.current_event = CruiseEvent(target_velocity=dpg.get_value("cruise_velocity_input"), cruise_distance=dpg.get_value("cruise_distance_input"), pitch_angle=dpg.get_value("pitch_angle_input"))
             clear_input_window()
             dpg.add_text("Cruise has been added to the mission sequence, you may continue entering missions into the mission sequence\nor press start to initiate the sequence shown in the mission screen.", parent="dynamic_event_inputs")
         case "land":
@@ -62,3 +62,20 @@ def clear_button_callback():
 def start_button_callback():
     state.mission_manager.execute_mission()
 
+def update_button_callback():
+    index = state.event_sequence.index(state.event_to_update)
+    match state.event_to_update:
+        case TakeoffEvent():
+            state.event_sequence[index] = TakeoffEvent(target_thrust=dpg.get_value("thrust_slider"), target_altitude=dpg.get_value("altitude_input"))
+            clear_input_window()
+            dpg.add_text("Mission has been updated", parent="dynamic_event_inputs")
+        case HoverEvent():
+            state.event_sequence[index] = HoverEvent(hover_time=dpg.get_value("hover_time_input"))
+            clear_input_window()
+            dpg.add_text("Mission has been updated", parent="dynamic_event_inputs")
+        case CruiseEvent():
+            state.event_sequence[index] = CruiseEvent(target_velocity=dpg.get_value("cruise_velocity_input"), cruise_distance=dpg.get_value("cruise_distance_input"), pitch_angle=dpg.get_value("pitch_angle_input"))
+            clear_input_window()
+            dpg.add_text("Mission has been updated", parent="dynamic_event_inputs")
+    update_mission_window()
+    dpg.configure_item("update_button", show=False)

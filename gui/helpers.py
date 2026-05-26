@@ -25,6 +25,9 @@ def clear_input_window():
     dpg.delete_item("dynamic_event_inputs", children_only=True)
     dpg.configure_item("dynamic_event_inputs", horizontal=False)
 
+def show_update_button():
+    dpg.configure_item("update_button", show=True)
+
 def show_takeoff_window():
     clear_input_window()
     dpg.add_text("Takeoff Event Inputs", parent="dynamic_event_inputs")
@@ -58,14 +61,16 @@ def show_cruise_window():
 
     dpg.add_input_float(label="Cruise Velocity (m/s)", tag="cruise_velocity_input", default_value=0, format="%.2f", parent="dynamic_event_inputs")
     dpg.add_input_float(label="Cruise Distance (m)", tag="cruise_distance_input", default_value=0, format="%.2f", parent="dynamic_event_inputs")
+    dpg.add_input_float(label="Pitch Angle (degrees)", tag="pitch_angle_input", default_value=0, format="%.2f", parent="dynamic_event_inputs")
 
-def edit_cruise_window(target_velocity, cruise_distance):
+def edit_cruise_window(target_velocity, cruise_distance, pitch_angle):
     clear_input_window()
 
     dpg.add_text("Cruise Event Inputs", parent="dynamic_event_inputs")
 
     dpg.add_input_float(label="Cruise Velocity (m/s)", tag="cruise_velocity_input", default_value=target_velocity, format="%.2f", parent="dynamic_event_inputs")
     dpg.add_input_float(label="Cruise Distance (m)", tag="cruise_distance_input", default_value=cruise_distance, format="%.2f", parent="dynamic_event_inputs")
+    dpg.add_input_float(label="Pitch Angle (degrees)", tag="pitch_angle_input", default_value=pitch_angle, format="%.2f", parent="dynamic_event_inputs")
 
 def plot_takeoff():
     dpg.delete_item("plot_windows", children_only=True)
@@ -82,4 +87,17 @@ def plot_cruise():
         y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Velocity (m/s)")
 
         dpg.add_line_series(state.time_plot, state.velocity_plot, parent=y_axis)
-    
+
+def plot_landing():
+    dpg.delete_item("plot_windows", children_only=True)
+    with dpg.plot(label="Landing Altitude Data", parent="plot_windows"):
+        dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+        y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Altitude (m)")
+
+        dpg.add_line_series(state.time_plot, state.altitude_plot, parent=y_axis)
+
+    with dpg.plot(label="Landing Velocity Data", parent="plot_windows"):
+        dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+        y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Velocity (m/s)")
+
+        dpg.add_line_series(state.time_plot, state.velocity_plot, parent=y_axis)

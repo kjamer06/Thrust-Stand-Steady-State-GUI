@@ -6,10 +6,12 @@ class AppState:
         self.power_max = 47
         self.mass = 0
         self.altitude = 0
+        self.up_thrust = 0
         self.killswitch = False
         self.mission_manager = None
         self.flightstand_manager = None
         self.current_event = None
+        self.event_to_update = None
         self.drag_coefficient = 0.95
         # MATPLOTLIB ARRAYS
         self.altitude_plot = []

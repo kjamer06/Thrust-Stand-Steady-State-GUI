@@ -17,7 +17,7 @@ class MissionManager:
                 case HoverEvent():
                     hover_simulation(self.flightstand_manager, event.hover_time)
                 case CruiseEvent():
-                    cruise_simulation(self.flightstand_manager, event.target_velocity, event.cruise_distance)
+                    cruise_simulation(self.flightstand_manager, event.target_velocity, event.cruise_distance, event.pitch_angle)
                 case LandEvent():
                     land_simulation(self.flightstand_manager)
                 case _:
