@@ -8,6 +8,7 @@ def drone_specifications_callback():
     state.power_max = dpg.get_value("max_power_input")
     state.mass = dpg.get_value("mass_input")
     state.thrust_weight_ratio = state.thrust_max / state.mass
+    state.grav_force = state.mass * 9.81
 
     # Close drone specifications window and add info to log console
     dpg.configure_item("Drone Specifications", show=False)

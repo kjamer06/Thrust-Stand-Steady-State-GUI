@@ -11,6 +11,7 @@ class FlightStandManager:
         self.board = self.flightstand.create_simulated_board()
 
         self.throttle = self.flightstand.find_output_by_type(self.flightstand.Proto.ESC)
+
         
         # Sensors will be initialized here for easy access
         self.thrust_sensor = self.flightstand.find_input_by_type(self.flightstand.Proto.FORCE_FZ)
@@ -23,10 +24,15 @@ class FlightStandManager:
         self.throttle.output_target.active = True
 
         state.flightstand_manager = self
+        state.throttle_max = self.flightstand.find_output_by_type(self.flightstand.Proto.ESC).max_user_value
+        state.throttle_min = self.flightstand.find_output_by_type(self.flightstand.Proto.ESC).min_user_value
 
     def set_throttle(self, value):
         self.throttle.output_target.target_value = value
         self.flightstand.update_output(self.throttle, ['output_target'])
+    
+    def get_throttle(self):
+        return self.throttle.output_target.target_value
 
     def get_thrust(self):
         return self.flightstand.get_latest_input_sample(self.thrust_sensor).filtered_value

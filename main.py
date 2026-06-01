@@ -17,6 +17,7 @@
 from core.flightstand_manager import FlightStandManager
 from core.mission_manager import MissionManager
 from core import state
+from config.characteristic_tests import find_limits
 
 from gui.main_window import initialize_GUI
 
@@ -25,7 +26,6 @@ def main():
     state.flightstand_manager = flightstand_manager
     mission_manager = MissionManager(flightstand_manager=flightstand_manager)
     state.mission_manager = mission_manager
-
     initialize_GUI()
 
 if __name__ == "__main__":

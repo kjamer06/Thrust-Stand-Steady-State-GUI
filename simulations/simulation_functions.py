@@ -12,58 +12,52 @@ def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
         print("[ERR] Target thrust is too low to takeoff")
         return
 
-    spin_propellers(flightstand_manager=flightstand_manager)
+   # spin_propellers(flightstand_manager=flightstand_manager)
     print("[SIM] Starting takeoff simulation")
 
+    pid = PID(Kp=2000, Ki=1500, Kd=0, setpoint=target_thrust)
+    pid.output_limits = (1000, 2000)
 
-    pid = PID(Kp=100, Ki=1, Kd=80, setpoint=target_thrust)
-    pid.output_limits = (-50, 50)
+    state.altitude = 0
+    state.vertical_velocity = 0
 
-    filtered_thrust = 0
-    velocity = 0
-    altitude = 0
     initial_time = time.monotonic()
     plot_start_time = time.monotonic()
     state.time_plot = []
     state.thrust_plot = []
 
-    while altitude < target_altitude:
+    while state.altitude < target_altitude:
         time_now = time.monotonic()
         dt = time_now - initial_time
         initial_time = time_now
-
         time_elapsed = time_now - plot_start_time
 
+        drag_direction = 1 if state.vertical_velocity >= 0 else -1
+        drag_force = state.drag_coefficient * (state.vertical_velocity**2) * drag_direction
         measured_thrust = flightstand_manager.get_thrust()
-        
-        gravity_force = state.mass * 9.81
-        net_force = measured_thrust - gravity_force
-        
-        acceleration = net_force / state.mass
+        net_force = measured_thrust - state.grav_force - drag_force
 
-        velocity += acceleration * dt
-        altitude += velocity * dt
-        
-        if altitude < 0:
-            altitude = 0
-            velocity = 0 
+        state.vertical_acceleration = net_force / state.mass
+        state.vertical_velocity += state.vertical_acceleration * dt
+        state.altitude += state.vertical_velocity * dt
 
-        print(f"Altitude: {altitude:.2f} m | Thrust: {measured_thrust:.2f} N")
+        if state.altitude < 0:
+            state.altitude = 0
+            state.vertical_velocity = 0
+        if state.altitude > target_altitude:
+            state.altitude = target_altitude
+            state.vertical_velocity = 0
+            state.vertical_acceleration = 0
 
-        filtered_thrust = (0.9 * filtered_thrust) + (0.1 * measured_thrust)
+        print(f"Altitude: {state.altitude:.2f} m | Thrust: {measured_thrust:.2f} N | Fg {state.grav_force:2f}")
 
-        throttle_adjustment = pid(filtered_thrust)
-        
-        current_throttle = flightstand_manager.throttle.output_target.target_value
-        new_throttle = clamp(current_throttle + throttle_adjustment, THROTTLE_MIN, THROTTLE_MAX)
+        throttle_adjustment = pid(measured_thrust, dt)
 
-        flightstand_manager.set_throttle(new_throttle)
-        state.altitude = altitude
-        #state.up_thrust = measured_thrust
+        flightstand_manager.set_throttle(throttle_adjustment)
 
-        state.thrust_plot.append(filtered_thrust)
+        state.thrust_plot.append(measured_thrust)
         state.time_plot.append(time_elapsed)
-        state.altitude_plot.append(altitude)
+        state.altitude_plot.append(state.altitude)
 
         time.sleep(0.02)
     plot_takeoff()
@@ -71,82 +65,100 @@ def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
     
 def hover_simulation(flightstand_manager, duration):
     print("[SIM] Starting hover simulation")
-    hover_thrust = state.mass * 9.81
-
-    pid = PID(Kp= 22, Ki=0.8, Kd=8, setpoint=hover_thrust)
+    pid = PID(Kp=300, Ki=200, Kd=600, setpoint=state.altitude)
     pid.output_limits = (1000, 2000)
 
-    filtered_thrust = 0
+    dt = 0.02 
     hover_time = time.monotonic() + int(duration)
+    
     while time.monotonic() < hover_time:
-        current_thrust = flightstand_manager.get_thrust()
-        filtered_thrust = (0.9 * filtered_thrust) + (0.1 * current_thrust)
+        start_time = time.monotonic()
 
-        throttle_adjustment = pid(filtered_thrust)
-        flightstand_manager.set_throttle(throttle_adjustment)
-        time.sleep(0.02)
+        print(f"Altitude: {state.altitude:.2f} | Target: {pid.setpoint}")
+
+    
+        throttle = pid(state.altitude)
+        flightstand_manager.set_throttle(throttle)
+        thrust_y = flightstand_manager.get_thrust() 
+
+        drag_direction = 1 if state.vertical_velocity >= 0 else -1
+        drag_force = state.drag_coefficient * (state.vertical_velocity**2) * drag_direction
+        
+        net_force = thrust_y - state.grav_force - drag_force
+        state.vertical_acceleration = net_force / state.mass
+        state.vertical_velocity += state.vertical_acceleration * dt
+        state.altitude += state.vertical_velocity * dt
+
+        loop_execution_time = time.monotonic() - start_time
+        sleep_time = max(0, dt - loop_execution_time)
+        time.sleep(sleep_time)
+
     print("[SIM] Hover event executed successfully")
 
-def cruise_simulation(flightstand_manager, target_velocity, target_distance, pitch_angle):
-    
+def cruise_simulation(flightstand_manager, target_velocity, target_distance):
     print("[SIM] Starting cruise simulation")
 
-    velocity = 0
     state.time_plot = []
-    state.velocity_plot = []
-    distance = 0
-    initial_time = time.monotonic()
-    plot_start_time = time.monotonic()
-    pitch_radians = m.radians(pitch_angle)
-    DRAG_COEFFICIENT = 0.0005
+    state.altitude_plot = []
+    state.thrust_plot = []
 
-    pid = PID(Kp=200, Ki=120, Kd=10, setpoint=target_velocity)
-    pid.output_limits = (THROTTLE_MIN, THROTTLE_MAX)
+    state.displacement = 0
+    state.vertical_velocity = 0
+    state.vertical_acceleration = 0
+    state.horizontal_velocity = 0
+    state.horizontal_acceleration = 0
+    state.pitch_angle = 0
 
-    while distance < target_distance:
-        time_now = time.monotonic()
-        dt = time_now - initial_time
-        initial_time = time_now
-
-        cruise_thrust = flightstand_manager.get_thrust()
-        # CHANGE THIS ONCE YOU FIGURE OUT HOW WE WANT TO SIMULATE DRAG (just change cruise_thrust to net thrust)
-        #cruise_acceleration = cruise_thrust / state.mass
-        
-        drag_force = DRAG_COEFFICIENT * velocity**2
-        drag_force *= -1 if velocity < 0 else 1
-
-        thrust_x = cruise_thrust * m.sin(pitch_radians)
-        thrust_y = cruise_thrust * m.cos(pitch_radians)
+    altitude_pid = PID(Kp=300, Ki=200, Kd=600, setpoint=state.altitude)
+    altitude_pid.output_limits = (1000, 2000)
     
-        state.up_thrust = thrust_y
-        net_force_x = thrust_x - drag_force
-        # net_force_y = thrust_y - (state.mass * 9.81)
+    velocity_pid = PID(Kp=1.4, Ki=0.05, Kd=1.6, setpoint=target_velocity)
+    velocity_pid.output_limits = (-30, 30)
 
-        cruise_acceleration = net_force_x / state.mass
-        velocity += cruise_acceleration * dt
-        distance += velocity * dt
-
-        print(f"Velocity: {velocity:.2f} m/s | Distance: {distance:.2f} m | Thrust: {cruise_thrust:.2f} N")
-
-        throttle_adjustment = pid(velocity)
+    t1 = time.monotonic()
+    plot_time = time.monotonic()
+    while state.displacement < target_distance:
+        throttle_adjustment = altitude_pid(state.altitude)
         flightstand_manager.set_throttle(throttle_adjustment)
+        pitch_rad = m.radians(state.pitch_angle)
+        state.pitch_angle = velocity_pid(state.horizontal_velocity)
 
-        state.time_plot.append(time_now - plot_start_time)
-        state.velocity_plot.append(velocity)
+        t2 = time.monotonic()
+        dt = t2 - t1
+        t1 = t2
+        elapsed_time = t2 - plot_time
+
+        drag_direction_y = 1 if state.vertical_velocity >= 0 else -1
+        drag_force_y = state.drag_coefficient * (state.vertical_velocity**2) * drag_direction_y
+
+        drag_direction_x = 1 if state.horizontal_velocity >= 0 else -1
+        drag_force_x = state.drag_coefficient * (state.horizontal_velocity**2) * drag_direction_x
+
+
+        current_thrust = flightstand_manager.get_thrust()
+        thrust_x = current_thrust * m.sin(pitch_rad)
+        thrust_y = current_thrust * m.cos(pitch_rad)
+
+        state.vertical_acceleration = (thrust_y - (state.mass * 9.81)) / state.mass
+        state.vertical_velocity += state.vertical_acceleration * dt
+        state.altitude += state.vertical_velocity * dt
+
+        state.horizontal_acceleration = (thrust_x - drag_force_x) / state.mass
+        state.horizontal_velocity += state.horizontal_acceleration * dt
+        state.displacement += state.horizontal_velocity * dt
+
+        state.altitude_plot.append(state.altitude)
+        state.time_plot.append(elapsed_time)
+        state.thrust_plot.append(current_thrust)
+
+        print(f"Velocity: {state.horizontal_velocity:2f} | Distance: {state.displacement:2f} | Altitude: {state.altitude:2f}| Current Thrust: {current_thrust:2f} | Target Alt: {altitude_pid.setpoint} | Angle: {state.pitch_angle}")
 
         time.sleep(0.02)
     plot_cruise()
     print("[SIM] Cruise event executed successfully")
 
-def land_simulation(flightstand_manager):
-    """
-    if (state.altitude <= 0 or state.up_thrust < state.mass * 9.81):
-        print("[ERR] Landing cannot be completed, check to ensure you are not on the ground and that the drone has sufficient thrust")
-        return
-    """
-    
+def land_simulation(flightstand_manager):    
     velocity = 0
-    DRAG_COEFFICIENT = 0.0005
     grav_force = state.mass * 9.81
 
     state.velocity_plot = []
@@ -167,7 +179,7 @@ def land_simulation(flightstand_manager):
         initial_time = time_now
         elapsed_time = time_now - plot_start_time
 
-        drag_force = DRAG_COEFFICIENT * velocity**2
+        drag_force = state.drag_coefficient * velocity**2
         drag_force *= -1 if velocity < 0 else 1
 
         landing_thrust = flightstand_manager.get_thrust()
