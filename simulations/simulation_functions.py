@@ -18,7 +18,7 @@ def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
    # spin_propellers(flightstand_manager=flightstand_manager)
     print("[SIM] Starting takeoff simulation")
 
-    pid = PID(Kp=2000, Ki=1500, Kd=0, setpoint=target_thrust)
+    pid = PID(Kp=state.takeoff_PID[0], Ki=state.takeoff_PID[1], Kd=state.takeoff_PID[2], setpoint=target_thrust)
     pid.output_limits = (1000, 2000)
 
     state.altitude = 0
@@ -73,7 +73,7 @@ def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
     
 def hover_simulation(flightstand_manager, duration):
     print("[SIM] Starting hover simulation")
-    pid = PID(Kp=300, Ki=200, Kd=600, setpoint=state.altitude)
+    pid = PID(Kp=state.hover_PID[0], Ki=state.hover_PID[1], Kd=state.hover_PID[2], setpoint=state.altitude)
     pid.output_limits = (1000, 2000)
 
     dt = 0.02 
@@ -118,10 +118,10 @@ def cruise_simulation(flightstand_manager, target_velocity, target_distance):
     state.horizontal_acceleration = 0
     state.pitch_angle = 0
 
-    altitude_pid = PID(Kp=300, Ki=200, Kd=600, setpoint=state.altitude)
+    altitude_pid = PID(Kp=state.cruise_alt_PID[0], Ki=state.cruise_alt_PID[1], Kd=state.cruise_alt_PID[2], setpoint=state.altitude)
     altitude_pid.output_limits = (1000, 2000)
     
-    velocity_pid = PID(Kp=1.4, Ki=0.05, Kd=1.6, setpoint=target_velocity)
+    velocity_pid = PID(Kp=state.cruise_vel_PID[0], Ki=state.cruise_vel_PID[1], Kd=state.cruise_vel_PID[2], setpoint=target_velocity)
     velocity_pid.output_limits = (-30, 30)
 
     t1 = time.monotonic()
@@ -184,7 +184,7 @@ def land_simulation(flightstand_manager):
     t1 = time.monotonic()
     plot_time = time.monotonic()
 
-    landing_pid = PID(Kp=300, Ki=20, Kd=600, setpoint=LANDING_VELOCITY, output_limits=(1000, 2000))
+    landing_pid = PID(Kp=state.landing_PID[0], Ki=state.landing_PID[1], Kd=state.landing_PID[2], setpoint=LANDING_VELOCITY, output_limits=(1000, 2000))
     while state.altitude > 0:
         t2 = time.monotonic()
         dt = t2 - t1

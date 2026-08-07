@@ -6,8 +6,7 @@ class AppState:
         self.power_max = 47
         self.throttle_max = None
         self.throttle_min = None
-
-        self.killswitch = False
+        
         self.mission_manager = None
         self.flightstand_manager = None
         self.current_event = None
@@ -36,8 +35,10 @@ class AppState:
         self.velocity_plot = []
         self.power_plot = []
 
-    # THIS IS VERY VITAL TO PROGRAM IF THIS SWITCH IS FLIPPED FOR ANY REASON THE PROGRAM WILL SHUT OFF AND RESET ALL VALUES TO SAFE DEFAULTS
-    def kill_switch(self):
-        self.killswitch = True
+        self.takeoff_PID = [1000,1500,100]
+        self.hover_PID = [300,200,600]
+        self.cruise_alt_PID = [300,200,600]
+        self.cruise_vel_PID = [1.4,0.05,1.6]
+        self.landing_PID = [300,20,600]
 
 state = AppState()

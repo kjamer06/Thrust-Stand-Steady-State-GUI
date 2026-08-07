@@ -6,12 +6,15 @@ This class will initialize the flightstand and provide easy access to sensor rea
 the control PID functions 
 """
 class FlightStandManager:
-    def __init__(self):
+    def __init__(self, sim=False):
         self.flightstand = FlightStand()
-        self.board = self.flightstand.create_simulated_board()
+
+        if sim:
+            self.board = self.flightstand.create_simulated_board()
+        else:
+            self.board = self.flightstand.get_board("/boards/COM12")
 
         self.throttle = self.flightstand.find_output_by_type(self.flightstand.Proto.ESC)
-
         
         # Sensors will be initialized here for easy access
         self.thrust_sensor = self.flightstand.find_input_by_type(self.flightstand.Proto.FORCE_FZ)

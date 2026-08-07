@@ -21,7 +21,7 @@ from core import state
 from gui.main_window import initialize_GUI
 
 def main():
-    flightstand_manager = FlightStandManager()
+    flightstand_manager = FlightStandManager(sim=True)
     state.flightstand_manager = flightstand_manager
     mission_manager = MissionManager(flightstand_manager=flightstand_manager)
     state.mission_manager = mission_manager

@@ -1,8 +1,9 @@
 import dearpygui.dearpygui as dpg
 from config.settings import THRUST_MAX, POWER_MAX
 from gui.callbacks import drone_specifications_callback, takeoff_button_callback, hover_button_callback, cruise_button_callback
-from gui.callbacks import land_button_callback, add_button_callback, undo_button_callback, clear_button_callback, start_button_callback, update_button_callback
+from gui.callbacks import land_button_callback, add_button_callback, undo_button_callback, clear_button_callback, start_button_callback, update_button_callback, pid_menu_callback, pid_submit_callback
 from gui.helpers import load_texture, add_scaled_image
+from core.state import state
 
 def show_drone_specs():
     dpg.configure_item("Drone Specifications", show=True)
@@ -12,7 +13,7 @@ def initialize_GUI():
     load_texture("assets/cat_2.jpg", "auburn_logo_image")
 
 ######################################################
-# POPUP WINDOW FOR DRONE SPECIFICATIONS INPUT
+# POPUP WINDOWS
 ######################################################
 
     with dpg.window(tag="Drone Specifications",modal=True,height=200,width=350,pos=(470, 250),label="Drone Specifications",no_close=True,no_move=True,no_resize=True):
@@ -22,6 +23,34 @@ def initialize_GUI():
             dpg.add_input_float(label="Mass (kg)", tag="mass_input", default_value=0, format="%.2f")
 
             dpg.add_button(label="Submit", callback= drone_specifications_callback, tag="submit_specs_button")
+
+    with dpg.window(tag="PID Config",modal=True,height=200,width=350,pos=(470, 250),label="PID Config",no_move=True,no_resize=True, show=False):
+                dpg.add_text("Takeoff PID")
+                dpg.add_input_float(label="P", tag="takeoff_p", default_value=state.takeoff_PID[0], format="%.2f")
+                dpg.add_input_float(label="I", tag="takeoff_i", default_value=state.takeoff_PID[1], format="%.2f")
+                dpg.add_input_float(label="D", tag="takeoff_d", default_value=state.takeoff_PID[2], format="%.2f")
+
+                dpg.add_text("Hover PID")
+                dpg.add_input_float(label="P", tag="hover_p", default_value=state.hover_PID[0], format="%.2f")
+                dpg.add_input_float(label="I", tag="hover_i", default_value=state.hover_PID[1], format="%.2f")
+                dpg.add_input_float(label="D", tag="hover_d", default_value=state.hover_PID[2], format="%.2f")
+
+                dpg.add_text("Cruise Alt PID")
+                dpg.add_input_float(label="P", tag="cruise_alt_p", default_value=state.cruise_alt_PID[0], format="%.2f")
+                dpg.add_input_float(label="I", tag="cruise_alt_i", default_value=state.cruise_alt_PID[1], format="%.2f")
+                dpg.add_input_float(label="D", tag="cruise_alt_d", default_value=state.cruise_alt_PID[2], format="%.2f")
+
+                dpg.add_text("Cruise Vel PID")
+                dpg.add_input_float(label="P", tag="cruise_vel_p", default_value=state.cruise_vel_PID[0], format="%.2f")
+                dpg.add_input_float(label="I", tag="cruise_vel_i", default_value=state.cruise_vel_PID[1], format="%.2f")
+                dpg.add_input_float(label="D", tag="cruise_vel_d", default_value=state.cruise_vel_PID[2], format="%.2f")
+
+                dpg.add_text("Landing PID")
+                dpg.add_input_float(label="P", tag="landing_p", default_value=state.landing_PID[0], format="%.2f")
+                dpg.add_input_float(label="I", tag="landing_i", default_value=state.landing_PID[1], format="%.2f")
+                dpg.add_input_float(label="D", tag="landing_d", default_value=state.landing_PID[2], format="%.2f")
+    
+                dpg.add_button(label="Submit", callback= pid_submit_callback, tag="submit_PID_button")
 
 #######################################################
 # MAIN WINDOW
@@ -81,6 +110,7 @@ def initialize_GUI():
 
     with dpg.viewport_menu_bar():
         dpg.add_menu_item(label="Specs", callback=show_drone_specs)
+        dpg.add_menu_item(label="PID", callback=pid_menu_callback)
 
     dpg.setup_dearpygui()
     dpg.set_primary_window("main_window", True)

@@ -15,6 +15,26 @@ def drone_specifications_callback():
     dpg.configure_item("Drone Specifications", show=False)
     print("[INFO] Drone specifications submitted successfully")
 
+def pid_menu_callback():
+    dpg.configure_item("PID Config", show=True)
+
+def pid_submit_callback():
+    state.takeoff_PID = [dpg.get_value("takeoff_p"), dpg.get_value("takeoff_i"), dpg.get_value("takeoff_d")]
+    state.hover_PID = [dpg.get_value("hover_p"), dpg.get_value("hover_i"), dpg.get_value("hover_d")]
+    
+    state.cruise_alt_PID = [dpg.get_value("cruise_alt_p"), dpg.get_value("cruise_alt_i"), dpg.get_value("cruise_alt_d")]
+    state.cruise_vel_PID = [dpg.get_value("cruise_vel_p"), dpg.get_value("cruise_vel_i"), dpg.get_value("cruise_vel_d")]
+
+    state.landing_PID = [dpg.get_value("landing_p"), dpg.get_value("landing_i"), dpg.get_value("landing_d")]
+
+    print(state.takeoff_PID)
+    print(state.hover_PID)
+    print(state.cruise_alt_PID)
+    print(state.cruise_vel_PID)
+    print(state.landing_PID)
+    
+    dpg.configure_item("PID Config", show=False)
+
 def takeoff_button_callback():
     state.current_event = "takeoff"
     show_takeoff_window()
