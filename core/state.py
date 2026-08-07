@@ -34,6 +34,7 @@ class AppState:
         self.time_plot = []
         self.thrust_plot = []
         self.velocity_plot = []
+        self.power_plot = []
 
     # THIS IS VERY VITAL TO PROGRAM IF THIS SWITCH IS FLIPPED FOR ANY REASON THE PROGRAM WILL SHUT OFF AND RESET ALL VALUES TO SAFE DEFAULTS
     def kill_switch(self):

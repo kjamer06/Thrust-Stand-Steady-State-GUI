@@ -1,5 +1,5 @@
 """
- Mission simulation script for TYTO Series 1585 Thrust Stand
+ Mission simulation script for TYTO Series 15 Thrust Stand
  User will be able to configure a sequence of events to mimic a given mission profile which will be implemented
  with a GUI interface. The user will be able to simulate events such as takeoff, hovering at target power, cruise at
  target trim, etc.
@@ -14,11 +14,10 @@
  building a modular GUI application so if there are any inefficiencies or bad practices please inform me if you are reading this.
 
 """
+
 from core.flightstand_manager import FlightStandManager
 from core.mission_manager import MissionManager
 from core import state
-from config.characteristic_tests import find_limits
-
 from gui.main_window import initialize_GUI
 
 def main():

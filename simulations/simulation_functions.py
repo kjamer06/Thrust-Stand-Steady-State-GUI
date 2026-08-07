@@ -3,9 +3,12 @@ import math as m
 
 from simple_pid import PID
 from simulations.helpers import spin_propellers, clamp
-from gui.helpers import plot_takeoff, plot_cruise, plot_landing
-from config.settings import THROTTLE_MIN, THROTTLE_MAX
 from core.state import state
+
+def safety_cutoff(flightstand_manager):
+    print("[WARN] SAFETY CUTOFF ENGAGED")
+    flightstand_manager.set_throttle(1000)
+    
 
 def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
     if target_thrust <= state.mass * 9.81:
@@ -25,8 +28,13 @@ def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
     plot_start_time = time.monotonic()
     state.time_plot = []
     state.thrust_plot = []
+    state.power_plot = []
 
-    while state.altitude < target_altitude:
+    while state.altitude < target_altitude and not state.killswitch:
+        if state.killswitch:
+            safety_cutoff(flightstand_manager)
+            break
+        
         time_now = time.monotonic()
         dt = time_now - initial_time
         initial_time = time_now
@@ -49,7 +57,7 @@ def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
             state.vertical_velocity = 0
             state.vertical_acceleration = 0
 
-        print(f"Altitude: {state.altitude:.2f} m | Thrust: {measured_thrust:.2f} N | Fg {state.grav_force:2f}")
+        print(f"Altitude: {state.altitude:.2f} m | Thrust: {measured_thrust:.2f} N | Power: {flightstand_manager.get_power():2f}")
 
         throttle_adjustment = pid(measured_thrust, dt)
 
@@ -58,9 +66,9 @@ def takeoff_simulation(flightstand_manager, target_thrust, target_altitude):
         state.thrust_plot.append(measured_thrust)
         state.time_plot.append(time_elapsed)
         state.altitude_plot.append(state.altitude)
+        state.power_plot.append(flightstand_manager.get_power())
 
         time.sleep(0.02)
-    plot_takeoff()
     print("[SIM] Takeoff event executed successfully")
     
 def hover_simulation(flightstand_manager, duration):
@@ -101,6 +109,7 @@ def cruise_simulation(flightstand_manager, target_velocity, target_distance):
     state.time_plot = []
     state.altitude_plot = []
     state.thrust_plot = []
+    state.power_plot = []
 
     state.displacement = 0
     state.vertical_velocity = 0
@@ -150,58 +159,57 @@ def cruise_simulation(flightstand_manager, target_velocity, target_distance):
         state.altitude_plot.append(state.altitude)
         state.time_plot.append(elapsed_time)
         state.thrust_plot.append(current_thrust)
+        state.power_plot.append(flightstand_manager.get_power())
 
         print(f"Velocity: {state.horizontal_velocity:2f} | Distance: {state.displacement:2f} | Altitude: {state.altitude:2f}| Current Thrust: {current_thrust:2f} | Target Alt: {altitude_pid.setpoint} | Angle: {state.pitch_angle}")
 
         time.sleep(0.02)
-    plot_cruise()
     print("[SIM] Cruise event executed successfully")
 
 def land_simulation(flightstand_manager):    
-    velocity = 0
-    grav_force = state.mass * 9.81
+    print("[SIM] Starting landing simulation")
 
-    state.velocity_plot = []
     state.time_plot = []
     state.altitude_plot = []
+    state.velocity_plot = []
+    state.power_plot = []
+    state.thrust_plot = []
 
-    pid = PID(Kp=0, Ki=10, Kd=500, setpoint=(grav_force - 0.5))
-    pid.output_limits = (THROTTLE_MIN, THROTTLE_MAX)
-    initial_time = time.monotonic()
-    plot_start_time = time.monotonic()
-    man_altitude = state.altitude * 0.10
+    state.vertical_acceleration = 0
+    state.vertical_velocity = 0
+    state.horizontal_acceleration =0
+    state.horizontal_velocity = 0
+    LANDING_VELOCITY = -0.5
 
-    print("[SIM] Starting landing sequence")
+    t1 = time.monotonic()
+    plot_time = time.monotonic()
 
-    while (state.altitude > 0):
-        time_now = time.monotonic()
-        dt = time_now - initial_time
-        initial_time = time_now
-        elapsed_time = time_now - plot_start_time
+    landing_pid = PID(Kp=300, Ki=20, Kd=600, setpoint=LANDING_VELOCITY, output_limits=(1000, 2000))
+    while state.altitude > 0:
+        t2 = time.monotonic()
+        dt = t2 - t1
+        t1 = t2
+        elapsed_time = t2 - plot_time
 
-        drag_force = state.drag_coefficient * velocity**2
-        drag_force *= -1 if velocity < 0 else 1
+        print(f"Altitude: {state.altitude:.2f} m | Thrust: {flightstand_manager.get_thrust():.2f} N | Velocity: {state.vertical_velocity:.2f} m/s")
+        current_thrust = flightstand_manager.get_thrust()
+        
+        state.vertical_acceleration = (current_thrust - state.grav_force) / state.mass
+        state.vertical_velocity += state.vertical_acceleration * dt
+        state.altitude += state.vertical_velocity * dt
 
-        landing_thrust = flightstand_manager.get_thrust()
-        net_thrust = landing_thrust - (drag_force + grav_force)
+        throttle_adjustment = landing_pid(state.vertical_velocity)
+        flightstand_manager.set_throttle(throttle_adjustment)
 
-        acceleration = net_thrust / state.mass
-        velocity += acceleration * dt
-        state.altitude += velocity * dt
-
-        if state.altitude < 0:
+        if state.altitude <= state.altitude * 0.05:
+            state.vertical_velocity = 0
+            state.vertical_acceleration = 0
             state.altitude = 0
+            flightstand_manager.set_throttle(1000)
 
         state.altitude_plot.append(state.altitude)
         state.time_plot.append(elapsed_time)
-        state.velocity_plot.append(velocity)
-
-        print(f"Velocity: {velocity:2f} | Altitude: {state.altitude:2f}")
-
-        current_throttle = flightstand_manager.throttle.output_target.target_value
-        throttle_adjustment = current_throttle - pid(state.altitude)
-        throttle_adjustment = clamp(throttle_adjustment, THROTTLE_MIN, THROTTLE_MAX)
-
-        flightstand_manager.set_throttle(throttle_adjustment)
+        state.thrust_plot.append(state.thrust_plot)
+        state.power_plot.append(flightstand_manager.get_power())
         time.sleep(0.02)
-    plot_landing()
+    print("[SIM] Landing Successful")

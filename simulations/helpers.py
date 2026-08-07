@@ -1,4 +1,3 @@
-# A location for my lil helpers, they're like my oompa loompas but they cant sing unfortunately
 import time
 import dearpygui.dearpygui as dpg
 from core.state import state

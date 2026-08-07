@@ -2,6 +2,7 @@ from simulations.simulation_functions import takeoff_simulation, hover_simulatio
 from models.mission_events import TakeoffEvent, HoverEvent, CruiseEvent, LandEvent
 from core.state import state
 from config.settings import THROTTLE_MIN
+from gui.plots import plot_takeoff, plot_cruise, plot_landing
 
 class MissionManager:
     def __init__(self, flightstand_manager):
@@ -14,12 +15,15 @@ class MissionManager:
             match event:
                 case TakeoffEvent():
                     takeoff_simulation(self.flightstand_manager, event.target_thrust, event.target_altitude)
+                    plot_takeoff()
                 case HoverEvent():
                     hover_simulation(self.flightstand_manager, event.hover_time)
                 case CruiseEvent():
                     cruise_simulation(self.flightstand_manager, event.target_velocity, event.cruise_distance)
+                    plot_cruise()
                 case LandEvent():
                     land_simulation(self.flightstand_manager)
+                    plot_landing()
                 case _:
                     pass
         self.flightstand_manager.set_throttle(THROTTLE_MIN)

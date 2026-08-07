@@ -2,6 +2,7 @@ import dearpygui.dearpygui as dpg
 from core.state import state
 from models.mission_events import TakeoffEvent, HoverEvent, CruiseEvent, LandEvent
 from gui.helpers import show_takeoff_window, show_hover_window, show_cruise_window, update_mission_window, clear_input_window
+import threading
 
 def drone_specifications_callback():
     state.thrust_max = dpg.get_value("max_thrust_input")
@@ -61,7 +62,8 @@ def clear_button_callback():
     print(state.event_sequence)
 
 def start_button_callback():
-    state.mission_manager.execute_mission()
+    execute = threading.Thread(target=state.mission_manager.execute_mission, daemon=True)
+    execute.start()
 
 def update_button_callback():
     index = state.event_sequence.index(state.event_to_update)

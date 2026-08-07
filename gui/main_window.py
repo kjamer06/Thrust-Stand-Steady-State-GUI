@@ -81,12 +81,6 @@ def initialize_GUI():
 
     with dpg.viewport_menu_bar():
         dpg.add_menu_item(label="Specs", callback=show_drone_specs)
-        with dpg.menu(label="PID"):
-            dpg.add_menu_item(label="Takeoff")
-            dpg.add_menu_item(label="Hover")
-            dpg.add_menu_item(label="Cruise")
-            dpg.add_menu_item(label="Land")
-        
 
     dpg.setup_dearpygui()
     dpg.set_primary_window("main_window", True)
